@@ -7,8 +7,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -18,14 +20,16 @@ import origami.Filters;
 import origami.filters.FPS;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.net.URL;
+import java.util.Date;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
 
     @FXML
     private ImageView mat;
-    boolean start=false;
+    boolean start = false;
 
     @FXML
     private ComboBox<String> filters;
@@ -33,26 +37,64 @@ public class Controller implements Initializable {
     @FXML
     CheckBox fps;
 
+    @FXML
+    TextField vid;
+
+    @FXML
+    TextField message;
+
     ObservableList<String> options =
             FXCollections.observableArrayList();
+    private Mat last = new Mat();
 
-
-    private Image mat2Image(Mat frame)
-    {
+    private Image mat2Image(Mat frame) {
         MatOfByte buffer = new MatOfByte();
         Imgcodecs.imencode(".png", frame, buffer);
         return new Image(new ByteArrayInputStream(buffer.toArray()));
     }
 
     Filter f;
+
+    private void message(String e) {
+        System.out.println(e);
+        message.setText(e);
+    }
+
+    Mat buffer = new Mat();
+
     public void startCamera() {
-        new Thread(()-> {
-            VideoCapture cap = new VideoCapture(0);
-            Mat var1 = new Mat();
-            while(start && cap.grab()) {
-                cap.retrieve(var1);
-                mat.setImage(mat2Image(f.apply(var1)));
+        new Thread(() -> {
+            VideoCapture cap = null;
+            String _vid = vid.getText();
+            try {
+                int device = Integer.parseInt(_vid);
+                cap = new VideoCapture(device);
+                message("Open Device " + device);
+            } catch (Exception e) {
+                message(e.getMessage());
+                File f = new File(_vid);
+                if (f.isFile()) {
+                    cap = new VideoCapture(f.getAbsolutePath());
+                    message("Open File:" + f.getName());
+                } else {
+                    try {
+                        cap = new VideoCapture(_vid);
+                        message("Open URL:" + _vid);
+                    } catch (Exception e_) {
+//                        e_.printStackTrace();
+                        message("Can't open [" + _vid + "] ...");
+                        cap = new VideoCapture(0);
+                        message("Open Device 0");
+                    }
+                }
             }
+
+            while (start && cap.grab()) {
+                cap.retrieve(buffer);
+                last = f.apply(buffer);
+                mat.setImage(mat2Image(last));
+            }
+            message("Stream ended...");
             cap.release();
         }).start();
     }
@@ -69,12 +111,12 @@ public class Controller implements Initializable {
     }
 
     public void stream(ActionEvent actionEvent) {
-        if(!start) {
+        if (!start) {
             startCamera();
         } else {
-//            mat.imageProperty().set(null);
+            mat.setImage(mat2Image(new Mat(1, 1, CvType.CV_8UC3)));
         }
-        start=!start;
+        start = !start;
     }
 
     public void check(ActionEvent actionEvent) {
@@ -83,7 +125,7 @@ public class Controller implements Initializable {
 
     private void updateFilter() {
 
-        if(fps.isSelected()) {
+        if (fps.isSelected()) {
             f = new Filters(getCurrentFilter(), new FPS());
         } else {
             f = getCurrentFilter();
@@ -93,10 +135,18 @@ public class Controller implements Initializable {
     private Filter getCurrentFilter() {
         String current = filters.getValue();
         try {
-            return (Filter) Class.forName(current).newInstance();
+            Class klass = Class.forName(current);
+            return (Filter) klass.newInstance();
         } catch (Exception e) {
             e.printStackTrace();
-            return f->f;
+            message("Can't load:" + current);
+            return f -> f;
         }
+    }
+
+    public void takeShot(ActionEvent actionEvent) {
+        String file = new Date().toString() + ".png";
+        Imgcodecs.imwrite(file, last);
+        message(file + " was saved");
     }
 }

@@ -3,16 +3,18 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
-<SplitPane dividerPositions="1.0, 0.5" minHeight="600.0" minWidth="800.0" prefHeight="600.0" prefWidth="800.0" GridPane.rowSpan="2" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<SplitPane dividerPositions="1.0" minHeight="600.0" minWidth="800.0" prefHeight="600.0" prefWidth="800.0" GridPane.rowSpan="2" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <items>
       <ImageView fx:id="mat" fitHeight="600.0" fitWidth="636.0" pickOnBounds="true" preserveRatio="true" />
       <VBox prefHeight="200.0" prefWidth="100.0">
          <children>
-            <Button fx:id="stream" mnemonicParsing="false" onAction="#stream" text="Stream"/>
+            <Button fx:id="shot" mnemonicParsing="false" onAction="#takeShot" prefHeight="27.0" prefWidth="180.0" text="Screenshot" />
+            <TextField fx:id="message" editable="false" promptText="Message" />
+            <Button fx:id="stream" mnemonicParsing="false" onAction="#stream" prefHeight="27.0" prefWidth="170.0" text="Stream" />
+            <TextField fx:id="vid" promptText="Video File or Device" />
             <ComboBox fx:id="filters" prefHeight="27.0" prefWidth="300.0" promptText="Select FIlter" />
-            <CheckBox fx:id="fps" onAction="#check" mnemonicParsing="false" text="FPS" />
+            <CheckBox fx:id="fps" mnemonicParsing="false" onAction="#check" prefHeight="18.0" prefWidth="182.0" text="FPS" />
          </children>
       </VBox>
 
