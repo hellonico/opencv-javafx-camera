@@ -82,6 +82,7 @@ public class Controller implements Initializable {
     }
 
     private void updateFilter() {
+
         if(fps.isSelected()) {
             f = new Filters(getCurrentFilter(), new FPS());
         } else {
