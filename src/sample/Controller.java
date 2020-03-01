@@ -5,11 +5,13 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.apache.commons.lang3.StringUtils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -21,9 +23,13 @@ import origami.filters.FPS;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.ResourceBundle;
+
+import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_HEIGHT;
+import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_WIDTH;
 
 public class Controller implements Initializable {
 
@@ -36,12 +42,22 @@ public class Controller implements Initializable {
 
     @FXML
     CheckBox fps;
+//
+//    @FXML
+//    Button stream;
 
     @FXML
     TextField vid;
 
     @FXML
     TextField message;
+
+
+    @FXML
+    TextField width;
+
+    @FXML
+    TextField height;
 
     ObservableList<String> options =
             FXCollections.observableArrayList();
@@ -64,9 +80,12 @@ public class Controller implements Initializable {
 
     public void startCamera() {
         new Thread(() -> {
+
             VideoCapture cap = null;
             String _vid = vid.getText();
             try {
+                if (_vid.strip().equalsIgnoreCase(""))
+                    _vid = "0";
                 int device = Integer.parseInt(_vid);
                 cap = new VideoCapture(device);
                 message("Open Device " + device);
@@ -89,13 +108,19 @@ public class Controller implements Initializable {
                 }
             }
 
+            if(!width.getText().equalsIgnoreCase("") && !height.getText().equalsIgnoreCase("")) {
+                cap.set(CAP_PROP_FRAME_WIDTH, Integer.parseInt(width.getText()));
+                cap.set(CAP_PROP_FRAME_HEIGHT, Integer.parseInt(height.getText()));
+            }
+            message(">> stream: " + cap.get(CAP_PROP_FRAME_WIDTH) + "x" + cap.get(CAP_PROP_FRAME_HEIGHT));
+
             while (start && cap.grab()) {
                 cap.retrieve(buffer);
                 last = f.apply(buffer);
                 mat.setImage(mat2Image(last));
             }
-            message("Stream ended...");
-            cap.release();
+
+            stopStream(cap);
         }).start();
     }
 
@@ -110,13 +135,17 @@ public class Controller implements Initializable {
                 });
     }
 
-    public void stream(ActionEvent actionEvent) {
+    public void startStream(ActionEvent actionEvent) {
         if (!start) {
             startCamera();
         } else {
-            mat.setImage(mat2Image(new Mat(1, 1, CvType.CV_8UC3)));
+            //mat.setImage(mat2Image(new Mat(1, 1, CvType.CV_8UC3)));
         }
         start = !start;
+    }
+    public void stopStream(VideoCapture cap) {
+        cap.release();
+        message("Stream ended...");
     }
 
     public void check(ActionEvent actionEvent) {
@@ -138,8 +167,8 @@ public class Controller implements Initializable {
             Class klass = Class.forName(current);
             return (Filter) klass.newInstance();
         } catch (Exception e) {
-            e.printStackTrace();
-            message("Can't load:" + current);
+            if(!StringUtils.isEmpty(current))
+                message("Can't load:" + current);
             return f -> f;
         }
     }
