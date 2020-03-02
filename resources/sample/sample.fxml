@@ -15,6 +15,7 @@
             <TextField fx:id="vid" promptText="Video File or Device" />
             <ComboBox fx:id="filters" prefHeight="27.0" prefWidth="300.0" promptText="Select FIlter" />
             <CheckBox fx:id="fps" mnemonicParsing="false" onAction="#check" prefHeight="18.0" prefWidth="182.0" text="FPS" />
+            <CheckBox fx:id="fullscreen" mnemonicParsing="false" prefHeight="18.0" prefWidth="182.0" text="Fullscreen" />
             <TextField fx:id="width" layoutX="10.0" layoutY="91.0" promptText="Width" />
             <TextField fx:id="height" layoutX="10.0" layoutY="163.0" promptText="Height" />
          </children>

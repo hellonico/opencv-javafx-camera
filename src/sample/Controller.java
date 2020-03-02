@@ -1,35 +1,36 @@
 package sample;
 
+import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_HEIGHT;
+import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_WIDTH;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.net.URL;
+import java.util.Date;
+import java.util.ResourceBundle;
+
+import javafx.scene.input.KeyEvent;
+import org.apache.commons.lang3.StringUtils;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.videoio.VideoCapture;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.apache.commons.lang3.StringUtils;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.videoio.VideoCapture;
+import origami.Camera;
 import origami.Filter;
 import origami.Filters;
+import origami.StoppableCamera;
 import origami.filters.FPS;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Date;
-import java.util.ResourceBundle;
-
-import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_HEIGHT;
-import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_WIDTH;
 
 public class Controller implements Initializable {
 
@@ -42,9 +43,9 @@ public class Controller implements Initializable {
 
     @FXML
     CheckBox fps;
-//
-//    @FXML
-//    Button stream;
+    //
+    // @FXML
+    // Button stream;
 
     @FXML
     TextField vid;
@@ -52,16 +53,17 @@ public class Controller implements Initializable {
     @FXML
     TextField message;
 
-
     @FXML
     TextField width;
 
     @FXML
     TextField height;
 
-    ObservableList<String> options =
-            FXCollections.observableArrayList();
+    ObservableList<String> options = FXCollections.observableArrayList();
     private Mat last = new Mat();
+
+    @FXML
+    CheckBox fullscreen;
 
     private Image mat2Image(Mat frame) {
         MatOfByte buffer = new MatOfByte();
@@ -77,6 +79,7 @@ public class Controller implements Initializable {
     }
 
     Mat buffer = new Mat();
+    StoppableCamera fullscreenCam = new StoppableCamera();
 
     public void startCamera() {
         new Thread(() -> {
@@ -100,7 +103,7 @@ public class Controller implements Initializable {
                         cap = new VideoCapture(_vid);
                         message("Open URL:" + _vid);
                     } catch (Exception e_) {
-//                        e_.printStackTrace();
+                        // e_.printStackTrace();
                         message("Can't open [" + _vid + "] ...");
                         cap = new VideoCapture(0);
                         message("Open Device 0");
@@ -108,19 +111,25 @@ public class Controller implements Initializable {
                 }
             }
 
-            if(!width.getText().equalsIgnoreCase("") && !height.getText().equalsIgnoreCase("")) {
+            if (!width.getText().equalsIgnoreCase("") && !height.getText().equalsIgnoreCase("")) {
                 cap.set(CAP_PROP_FRAME_WIDTH, Integer.parseInt(width.getText()));
                 cap.set(CAP_PROP_FRAME_HEIGHT, Integer.parseInt(height.getText()));
             }
             message(">> stream: " + cap.get(CAP_PROP_FRAME_WIDTH) + "x" + cap.get(CAP_PROP_FRAME_HEIGHT));
 
-            while (start && cap.grab()) {
-                cap.retrieve(buffer);
-                last = f.apply(buffer);
-                mat.setImage(mat2Image(last));
+            if (fullscreen.isSelected()) {
+                fullscreenCam = new StoppableCamera();
+                fullscreenCam.device(Integer.parseInt(_vid)).filter(f).fullscreen().run();
+            } else {
+                while (start && cap.grab()) {
+                    cap.retrieve(buffer);
+                    last = f.apply(buffer);
+                    mat.setImage(mat2Image(last));
+                }
+                stopStream(cap);
             }
 
-            stopStream(cap);
+
         }).start();
     }
 
@@ -129,20 +138,20 @@ public class Controller implements Initializable {
         options.addAll(FindFilters.findFilters());
         filters.setItems(options);
         f = mat -> mat;
-        filters.getSelectionModel().selectedItemProperty().addListener(
-                (Observable, oldValue, newValue) -> {
-                    updateFilter();
-                });
+        filters.getSelectionModel().selectedItemProperty().addListener((Observable, oldValue, newValue) -> {
+            updateFilter();
+        });
     }
 
     public void startStream(ActionEvent actionEvent) {
         if (!start) {
             startCamera();
         } else {
-            //mat.setImage(mat2Image(new Mat(1, 1, CvType.CV_8UC3)));
+            // mat.setImage(mat2Image(new Mat(1, 1, CvType.CV_8UC3)));
         }
         start = !start;
     }
+
     public void stopStream(VideoCapture cap) {
         cap.release();
         message("Stream ended...");
@@ -167,7 +176,7 @@ public class Controller implements Initializable {
             Class klass = Class.forName(current);
             return (Filter) klass.newInstance();
         } catch (Exception e) {
-            if(!StringUtils.isEmpty(current))
+            if (!StringUtils.isEmpty(current))
                 message("Can't load:" + current);
             return f -> f;
         }
@@ -177,5 +186,12 @@ public class Controller implements Initializable {
         String file = new Date().toString() + ".png";
         Imgcodecs.imwrite(file, last);
         message(file + " was saved");
+    }
+
+    public void type(KeyEvent keyEvent) {
+        if(keyEvent.getCharacter().equalsIgnoreCase("f")) {
+            fullscreenCam.setStop(true);
+        }
+
     }
 }
