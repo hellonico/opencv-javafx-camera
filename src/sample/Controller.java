@@ -79,7 +79,7 @@ public class Controller implements Initializable {
     }
 
     Mat buffer = new Mat();
-    StoppableCamera fullscreenCam = new StoppableCamera();
+    StoppableCamera fullscreenCam;
 
     public void startCamera() {
         new Thread(() -> {
@@ -119,15 +119,19 @@ public class Controller implements Initializable {
 
             if (fullscreen.isSelected()) {
                 fullscreenCam = new StoppableCamera();
-                fullscreenCam.device(Integer.parseInt(_vid)).filter(f).fullscreen().run();
+                fullscreenCam
+                        .cap(cap)
+                        .filter(f)
+                        .fullscreen()
+                        .run();
             } else {
                 while (start && cap.grab()) {
                     cap.retrieve(buffer);
                     last = f.apply(buffer);
                     mat.setImage(mat2Image(last));
                 }
-                stopStream(cap);
             }
+            stopStream(cap);
 
 
         }).start();
@@ -153,6 +157,7 @@ public class Controller implements Initializable {
     }
 
     public void stopStream(VideoCapture cap) {
+        start = false;
         cap.release();
         message("Stream ended...");
     }
@@ -188,10 +193,4 @@ public class Controller implements Initializable {
         message(file + " was saved");
     }
 
-    public void type(KeyEvent keyEvent) {
-        if(keyEvent.getCharacter().equalsIgnoreCase("f")) {
-            fullscreenCam.setStop(true);
-        }
-
-    }
 }
