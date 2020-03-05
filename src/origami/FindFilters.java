@@ -1,4 +1,4 @@
-package sample;
+package origami;
 
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;

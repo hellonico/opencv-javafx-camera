@@ -1,21 +1,5 @@
 package sample;
 
-import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_HEIGHT;
-import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_WIDTH;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.net.URL;
-import java.util.Date;
-import java.util.ResourceBundle;
-
-import javafx.scene.input.KeyEvent;
-import org.apache.commons.lang3.StringUtils;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.videoio.VideoCapture;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -26,11 +10,25 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import origami.Camera;
-import origami.Filter;
-import origami.Filters;
-import origami.StoppableCamera;
+import org.apache.commons.lang3.StringUtils;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.videoio.VideoCapture;
+import origami.*;
 import origami.filters.FPS;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.net.URL;
+import java.util.Date;
+import java.util.ResourceBundle;
+
+import static org.opencv.imgcodecs.Imgcodecs.imwrite;
+import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_HEIGHT;
+import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_WIDTH;
+import static origami.Origami.FilterToString;
+import static origami.Origami.StringToFilter;
 
 public class Controller implements Initializable {
 
@@ -46,6 +44,8 @@ public class Controller implements Initializable {
     //
     // @FXML
     // Button stream;
+    @FXML
+    TextField custom;
 
     @FXML
     TextField vid;
@@ -64,6 +64,8 @@ public class Controller implements Initializable {
 
     @FXML
     CheckBox fullscreen;
+
+    private boolean streamToJpg = false;
 
     private Image mat2Image(Mat frame) {
         MatOfByte buffer = new MatOfByte();
@@ -133,8 +135,14 @@ public class Controller implements Initializable {
             }
             stopStream(cap);
 
-
         }).start();
+
+        if (streamToJpg)
+            new Thread(() -> {
+                while (start) {
+                    imwrite("stream.jpg", last);
+                }
+            }).start();
     }
 
     @Override
@@ -179,7 +187,10 @@ public class Controller implements Initializable {
         String current = filters.getValue();
         try {
             Class klass = Class.forName(current);
-            return (Filter) klass.newInstance();
+            Filter _f = (Filter) klass.newInstance();
+            String label = FilterToString(_f);
+            custom.setText(label);
+            return _f;
         } catch (Exception e) {
             if (!StringUtils.isEmpty(current))
                 message("Can't load:" + current);
@@ -189,8 +200,45 @@ public class Controller implements Initializable {
 
     public void takeShot(ActionEvent actionEvent) {
         String file = new Date().toString() + ".png";
-        Imgcodecs.imwrite(file, last);
+        imwrite(file, last);
         message(file + " was saved");
+    }
+
+
+    public class MyFileWatcher extends FileWatcher
+    {
+        public MyFileWatcher(File watchFile)
+        {
+            super(watchFile);
+        }
+
+        @Override
+        public void doOnChange() {
+            keyType();
+        }
+
+    }
+
+    MyFileWatcher fw;
+    public void keyType() {
+        String customFilter = custom.getText();
+        File f = new File(customFilter);
+        if(fw!=null) fw.stopThread();
+        if(f.exists()) {
+            Filter fi = StringToFilter(f);
+            this.f = fi;
+            fw = new MyFileWatcher(f);
+            fw.start();
+            message("Filter loaded:"+f.getName());
+        }
+        try {
+            Filter _f = StringToFilter(customFilter);
+            this.f = _f;
+            message("Filter updated:"+FilterToString(_f));
+        } catch (Exception e) {
+            // unbound
+            // e.printStackTrace();
+        }
     }
 
 }

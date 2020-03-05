@@ -6,7 +6,7 @@
     <groupId>origami</groupId>
     <artifactId>fx-camera</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.1</version>
+    <version>0.2</version>
     <name>hellocvj</name>
     <description>Created with leiningen</description>
     <url>http://example.com/FIXME</url>
@@ -160,7 +160,7 @@
         <dependency>
             <groupId>origami</groupId>
             <artifactId>origami</artifactId>
-            <version>4.2.0-1</version>
+            <version>4.2.0-4</version>
         </dependency>
         <dependency>
             <groupId>org.clojure</groupId>
@@ -170,7 +170,7 @@
         <dependency>
             <groupId>origami</groupId>
             <artifactId>filters</artifactId>
-            <version>1.8</version>
+            <version>1.9-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
