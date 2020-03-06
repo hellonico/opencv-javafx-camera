@@ -10,13 +10,16 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.apache.commons.lang3.StringUtils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
-import origami.*;
+import origami.Camera;
+import origami.Filter;
+import origami.Filters;
+import origami.FindFilters;
 import origami.filters.FPS;
+import origami.utils.FileWatcher;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -81,7 +84,7 @@ public class Controller implements Initializable {
     }
 
     Mat buffer = new Mat();
-    StoppableCamera fullscreenCam;
+    Camera fullscreenCam;
 
     public void startCamera() {
         new Thread(() -> {
@@ -120,7 +123,7 @@ public class Controller implements Initializable {
             message(">> stream: " + cap.get(CAP_PROP_FRAME_WIDTH) + "x" + cap.get(CAP_PROP_FRAME_HEIGHT));
 
             if (fullscreen.isSelected()) {
-                fullscreenCam = new StoppableCamera();
+                fullscreenCam = new Camera();
                 fullscreenCam
                         .cap(cap)
                         .filter(f)
@@ -192,7 +195,7 @@ public class Controller implements Initializable {
             custom.setText(label);
             return _f;
         } catch (Exception e) {
-            if (!StringUtils.isEmpty(current))
+            if (!"".equals(current) && current != null)
                 message("Can't load:" + current);
             return f -> f;
         }
@@ -205,10 +208,8 @@ public class Controller implements Initializable {
     }
 
 
-    public class MyFileWatcher extends FileWatcher
-    {
-        public MyFileWatcher(File watchFile)
-        {
+    public class MyFileWatcher extends FileWatcher {
+        public MyFileWatcher(File watchFile) {
             super(watchFile);
         }
 
@@ -220,21 +221,22 @@ public class Controller implements Initializable {
     }
 
     MyFileWatcher fw;
+
     public void keyType() {
         String customFilter = custom.getText();
         File f = new File(customFilter);
-        if(fw!=null) fw.stopThread();
-        if(f.exists()) {
+        if (fw != null) fw.stopThread();
+        if (f.exists()) {
             Filter fi = StringToFilter(f);
             this.f = fi;
             fw = new MyFileWatcher(f);
             fw.start();
-            message("Filter loaded:"+f.getName());
+            message("Filter loaded:" + f.getName());
         }
         try {
             Filter _f = StringToFilter(customFilter);
             this.f = _f;
-            message("Filter updated:"+FilterToString(_f));
+            message("Filter updated:" + FilterToString(_f));
         } catch (Exception e) {
             // unbound
             // e.printStackTrace();
