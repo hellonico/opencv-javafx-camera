@@ -225,6 +225,10 @@ public class Controller implements Initializable {
         message(file + " was saved");
     }
 
+    public void fullscreenClick(ActionEvent actionEvent) {
+        startCamera();
+    }
+
 
     public class MyFileWatcher extends FileWatcher {
         public MyFileWatcher(File watchFile) {

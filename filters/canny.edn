@@ -1,4 +1,7 @@
 [{:class origami.filters.ClojureFilter
   :fn "(fn[mat] (org.opencv.imgproc.Imgproc/applyColorMap mat mat 3) mat)"}
- {:class origami.filters.Annotate
-  :text "simple text updated hello"}]
+ ;{:class origami.filters.Annotate
+ ; :text "simple text updated hello"}
+ {:class origami.filters.DynamicAnnotate
+  :text "(java.util.Date.))"}
+ ]
