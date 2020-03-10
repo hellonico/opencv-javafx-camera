@@ -14,22 +14,18 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
-import origami.Camera;
-import origami.Filter;
-import origami.Filters;
-import origami.FindFilters;
+import origami.*;
 import origami.filters.FPS;
 import origami.utils.FileWatcher;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.ResourceBundle;
 
 import static org.opencv.imgcodecs.Imgcodecs.imwrite;
-import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_HEIGHT;
-import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_WIDTH;
 import static origami.Origami.FilterToString;
 import static origami.Origami.StringToFilter;
 
@@ -86,41 +82,63 @@ public class Controller implements Initializable {
     Mat buffer = new Mat();
     Camera fullscreenCam;
 
+    public VideoCapture getVideoCapture() {
+        String _vid = vid.getText();
+        VideoCapture cap;
+//            try {
+//                File.createTempFile("cam","edn");
+//
+//            } catch (IOException e) {
+//                // e.printStackTrace();
+//            }
+        try {
+            if (_vid.strip().equalsIgnoreCase(""))
+                _vid = "0";
+            int device = Integer.parseInt(_vid);
+            cap = new VideoCapture(device);
+            message("Open Device " + device);
+        } catch (Exception e) {
+            message(e.getMessage());
+            File f = new File(_vid);
+            if (f.isFile()) {
+                cap = new VideoCapture(f.getAbsolutePath());
+                message("Open File:" + f.getName());
+            } else {
+                try {
+                    cap = new VideoCapture(_vid);
+                    message("Open URL:" + _vid);
+                } catch (Exception e_) {
+                    // e_.printStackTrace();
+                    message("Can't open [" + _vid + "] ...");
+                    cap = new VideoCapture(0);
+                    message("Open Device 0");
+                }
+            }
+        }
+
+//            if (!width.getText().equalsIgnoreCase("") && !height.getText().equalsIgnoreCase("")) {
+//                cap.set(CAP_PROP_FRAME_WIDTH, Integer.parseInt(width.getText()));
+//                cap.set(CAP_PROP_FRAME_HEIGHT, Integer.parseInt(height.getText()));
+//            }
+//            message(">> stream: " + cap.get(CAP_PROP_FRAME_WIDTH) + "x" + cap.get(CAP_PROP_FRAME_HEIGHT));
+
+        return cap;
+    }
+    public VideoCapture getVideoCapture2() {
+        try {
+            String _vid = vid.getText();
+            return Origami.CaptureDevice(_vid);
+        } catch (Exception e) {
+            message(e.getMessage());
+            start = false;
+            throw new RuntimeException(e);
+        }
+    }
+
     public void startCamera() {
         new Thread(() -> {
 
-            VideoCapture cap = null;
-            String _vid = vid.getText();
-            try {
-                if (_vid.strip().equalsIgnoreCase(""))
-                    _vid = "0";
-                int device = Integer.parseInt(_vid);
-                cap = new VideoCapture(device);
-                message("Open Device " + device);
-            } catch (Exception e) {
-                message(e.getMessage());
-                File f = new File(_vid);
-                if (f.isFile()) {
-                    cap = new VideoCapture(f.getAbsolutePath());
-                    message("Open File:" + f.getName());
-                } else {
-                    try {
-                        cap = new VideoCapture(_vid);
-                        message("Open URL:" + _vid);
-                    } catch (Exception e_) {
-                        // e_.printStackTrace();
-                        message("Can't open [" + _vid + "] ...");
-                        cap = new VideoCapture(0);
-                        message("Open Device 0");
-                    }
-                }
-            }
-
-            if (!width.getText().equalsIgnoreCase("") && !height.getText().equalsIgnoreCase("")) {
-                cap.set(CAP_PROP_FRAME_WIDTH, Integer.parseInt(width.getText()));
-                cap.set(CAP_PROP_FRAME_HEIGHT, Integer.parseInt(height.getText()));
-            }
-            message(">> stream: " + cap.get(CAP_PROP_FRAME_WIDTH) + "x" + cap.get(CAP_PROP_FRAME_HEIGHT));
+            VideoCapture cap = getVideoCapture2();
 
             if (fullscreen.isSelected()) {
                 fullscreenCam = new Camera();

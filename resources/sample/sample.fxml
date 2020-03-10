@@ -12,7 +12,7 @@
             <Button fx:id="shot" mnemonicParsing="false" onAction="#takeShot" prefHeight="27.0" prefWidth="180.0" text="Screenshot" />
             <TextField fx:id="message" editable="false" promptText="Message" />
             <Button fx:id="stream" mnemonicParsing="false" onAction="#startStream" prefHeight="27.0" prefWidth="146.0" text="Stream" />
-            <TextField fx:id="vid" promptText="Video File or Device" />
+            <TextField fx:id="vid" text="cam.edn" promptText="Video File or Device" />
             <ComboBox fx:id="filters" prefHeight="27.0" prefWidth="300.0" promptText="Select FIlter" />
             <TextField onKeyTyped="#keyType" fx:id="custom" promptText="Custom Filter" />
             <CheckBox fx:id="fps" mnemonicParsing="false" onAction="#check" prefHeight="18.0" prefWidth="182.0" text="FPS" />
