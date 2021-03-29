@@ -10,6 +10,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import main.java.origami.FindFilters;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -20,7 +21,6 @@ import origami.utils.FileWatcher;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.ResourceBundle;
@@ -95,22 +95,26 @@ public class Controller implements Initializable {
             if (_vid.strip().equalsIgnoreCase(""))
                 _vid = "0";
             int device = Integer.parseInt(_vid);
-            cap = new VideoCapture(device);
+            cap = new VideoCapture();
+            cap.open(device);
             message("Open Device " + device);
         } catch (Exception e) {
             message(e.getMessage());
             File f = new File(_vid);
             if (f.isFile()) {
-                cap = new VideoCapture(f.getAbsolutePath());
+                cap = new VideoCapture();
+                cap.open(f.getAbsolutePath());
                 message("Open File:" + f.getName());
             } else {
                 try {
-                    cap = new VideoCapture(_vid);
+                    cap = new VideoCapture();
+                    cap.open(_vid);
                     message("Open URL:" + _vid);
                 } catch (Exception e_) {
                     // e_.printStackTrace();
                     message("Can't open [" + _vid + "] ...");
-                    cap = new VideoCapture(0);
+                    cap = new VideoCapture();
+                    cap.open(0);
                     message("Open Device 0");
                 }
             }

@@ -3,3 +3,8 @@ target
 target
 *.iml
 /dependency-reduced-pom.xml
+.DS_Store
+.classpath
+.project
+.settings/
+.vscode/

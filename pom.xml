@@ -6,8 +6,8 @@
     <groupId>origami</groupId>
     <artifactId>fx-camera</artifactId>
     <packaging>jar</packaging>
-    <version>0.2</version>
-    <name>hellocvj</name>
+    <version>0.5</version>
+    <name>origami-fx-camera</name>
     <description>Created with leiningen</description>
     <url>http://example.com/FIXME</url>
     <properties>
@@ -22,40 +22,21 @@
     </licenses>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
-        <!-- <testSourceDirectory>test</testSourceDirectory> -->
-        <resources>
-            <resource>
-                <directory>resources</directory>
-            </resource>
-        </resources>
-        <testResources>
-            <testResource>
-                <directory>resources</directory>
-            </testResource>
-        </testResources>
+<!--        <sourceDirectory>src</sourceDirectory>-->
+<!--        &lt;!&ndash; <testSourceDirectory>test</testSourceDirectory> &ndash;&gt;-->
+<!--        <resources>-->
+<!--            <resource>-->
+<!--                <directory>resources</directory>-->
+<!--            </resource>-->
+<!--        </resources>-->
+<!--        <testResources>-->
+<!--            <testResource>-->
+<!--                <directory>resources</directory>-->
+<!--            </testResource>-->
+<!--        </testResources>-->
         <directory>target</directory>
         <outputDirectory>target/classes</outputDirectory>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.7</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>kotlin</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -97,30 +78,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>testCompile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <source>13</source>
-                    <target>13</target>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
     <repositories>
@@ -160,17 +117,18 @@
         <dependency>
             <groupId>origami</groupId>
             <artifactId>origami</artifactId>
-            <version>4.2.0-7</version>
+            <version>4.5.1-0</version>
         </dependency>
         <dependency>
             <groupId>org.clojure</groupId>
             <artifactId>clojure</artifactId>
             <version>1.10.1</version>
         </dependency>
+
         <dependency>
             <groupId>origami</groupId>
             <artifactId>filters</artifactId>
-            <version>1.10</version>
+            <version>1.12</version>
         </dependency>
 
         <dependency>
