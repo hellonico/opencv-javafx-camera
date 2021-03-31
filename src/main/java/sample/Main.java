@@ -15,6 +15,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+//        Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("sample.fxml"));
         URL fxml = Main.class.getResource("sample.fxml");
         Parent root = FXMLLoader.load(fxml);
         primaryStage.setTitle("Origami Cam");
