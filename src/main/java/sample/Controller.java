@@ -86,9 +86,6 @@ public class Controller implements Initializable {
     public VideoCapture getVideoCapture() {
         try {
             String _vid = vid.getText();
-            try {
-                return Origami.CaptureDevice(Integer.parseInt(_vid));
-            } catch(Exception e) {}
             return Origami.CaptureDevice(_vid);
         } catch (Exception e) {
             message(e.getMessage());
