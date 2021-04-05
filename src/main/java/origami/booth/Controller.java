@@ -1,13 +1,11 @@
-package sample;
+package origami.booth;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import origami.FindFilters;
@@ -39,12 +37,12 @@ public class Controller implements Initializable {
     private ComboBox<String> filters;
 
     @FXML
-    CheckBox fps;
+    ToggleButton fps;
     //
     // @FXML
     // Button stream;
     @FXML
-    TextField custom;
+    TextArea custom;
 
     @FXML
     TextField vid;
@@ -62,7 +60,7 @@ public class Controller implements Initializable {
     private Mat last = new Mat();
 
     @FXML
-    CheckBox fullscreen;
+    ToggleButton fullscreen;
 
     private boolean streamToJpg = false;
 
