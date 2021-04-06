@@ -5,11 +5,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import jfxtras.styles.jmetro.Style;
 import origami.Origami;
 
 public class Main extends Application {
-    static final private Style STYLE = Style.DARK;
 
     @Override
     public void start(Stage primaryStage) throws Exception {

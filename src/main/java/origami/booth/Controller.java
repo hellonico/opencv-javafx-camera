@@ -107,7 +107,11 @@ public class Controller implements Initializable {
             } else {
                 while (start && cap.grab()) {
                     cap.retrieve(buffer);
-                    last = f.apply(buffer);
+                    try {
+                        last = f.apply(buffer);
+                    } catch (Exception e) {
+                        last = buffer;
+                    }
                     mat.setImage(mat2Image(last));
                 }
             }
