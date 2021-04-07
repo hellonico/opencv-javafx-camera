@@ -1,6 +1,7 @@
 package origami.booth;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -8,6 +9,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.controlsfx.control.CheckComboBox;
 import origami.FindFilters;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -21,7 +23,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import static org.opencv.imgcodecs.Imgcodecs.imwrite;
 import static origami.Origami.FilterToString;
@@ -34,8 +38,7 @@ public class Controller implements Initializable {
     boolean start = false;
 
     @FXML
-    private ComboBox<String> filters;
-
+    private CheckComboBox<String> filters;
     @FXML
     ToggleButton fps;
     //
@@ -130,9 +133,13 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         options.addAll(FindFilters.findFilters());
-        filters.setItems(options);
+
+//        filters = new CheckComboBox<String>(options);
+        filters.getItems().addAll(options);
+        filters.requestLayout();
         f = mat -> mat;
-        filters.getSelectionModel().selectedItemProperty().addListener((Observable, oldValue, newValue) -> {
+        filters.getCheckModel().getCheckedIndices().addListener((ListChangeListener) e-> {
+            System.out.println(e.toString());
             updateFilter();
         });
     }
@@ -166,7 +173,25 @@ public class Controller implements Initializable {
     }
 
     private Filter getCurrentFilter() {
-        String current = filters.getValue();
+
+        List<String> list = filters.getCheckModel().getCheckedItems();
+//        System.out.println(StringToFilter(list));
+        List<Filter> _ff = list.stream().map(e-> {
+            Class klass = null;
+            try {
+                klass = Class.forName(e);
+                Filter _f = (Filter) klass.newInstance();
+                return _f;
+            } catch (Exception classNotFoundException) {
+                classNotFoundException.printStackTrace();
+                return null;
+            }
+        }).collect(Collectors.toList());
+
+        Filter xxf = new Filters(_ff.toArray(new Filter[list.size()]));
+        System.out.println(FilterToString(xxf));
+
+        String current = list.get(0);
         try {
             Class klass = Class.forName(current);
             Filter _f = (Filter) klass.newInstance();
