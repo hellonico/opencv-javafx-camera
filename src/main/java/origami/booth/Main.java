@@ -12,9 +12,9 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader fxmlLoader = new FXMLLoader();
-        Parent root = fxmlLoader.load(getClass().getResource("sample.fxml").openStream());
-        primaryStage.setTitle("Origami Cam");
-        Scene scene = new Scene(root, 800, 600);
+        Parent root = fxmlLoader.load(getClass().getResource("booth.fxml").openStream());
+        primaryStage.setTitle("Origami Photo Booth");
+        Scene scene = new Scene(root, 900, 600);
         primaryStage.setScene(scene);
 //        Controller controller = fxmlLoader.getController();
 //        JMetro jMetro = new JMetro(root, STYLE);

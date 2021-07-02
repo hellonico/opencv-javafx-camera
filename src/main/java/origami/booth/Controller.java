@@ -6,8 +6,11 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import origami.FindFilters;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -17,11 +20,18 @@ import origami.*;
 import origami.filters.FPS;
 import origami.utils.FileWatcher;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 
 import static org.opencv.imgcodecs.Imgcodecs.imwrite;
 import static origami.Origami.FilterToString;
@@ -30,11 +40,14 @@ import static origami.Origami.StringToFilter;
 public class Controller implements Initializable {
 
     @FXML
-    private ImageView mat;
+    ImageView preview;
+
+    @FXML
+    ImageView mat;
     boolean start = false;
 
     @FXML
-    private ComboBox<String> filters;
+    ComboBox<String> filters;
 
     @FXML
     ToggleButton fps;
@@ -64,10 +77,40 @@ public class Controller implements Initializable {
 
     private boolean streamToJpg = false;
 
-    private Image mat2Image(Mat frame) {
+    private Image mat2FXImage(Mat frame) {
         MatOfByte buffer = new MatOfByte();
         Imgcodecs.imencode(".png", frame, buffer);
         return new Image(new ByteArrayInputStream(buffer.toArray()));
+    }
+
+    private Image file2FXImage(File imageFile) {
+        String fileLocation = imageFile.toURI().toString();
+        return new Image(fileLocation);
+    }
+
+    ArrayList<Function<String, String>> onShotHandlers = new ArrayList();
+
+    public Controller() {
+        super();
+        // register shot handlers
+
+        // set last file
+        onShotHandlers.add(_file -> {
+            this.lastFile = new File(_file);
+            return _file;
+        });
+        // set preview image
+        onShotHandlers.add(_file -> {
+            this.preview.setImage(file2FXImage(lastFile));
+            return _file;
+        });
+        // copy to clipboard
+        onShotHandlers.add(_file -> {
+            StringSelection stringSelection = new StringSelection(new File(_file).getAbsolutePath());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection, null);
+            return _file;
+        });
     }
 
     Filter f;
@@ -112,7 +155,7 @@ public class Controller implements Initializable {
                     } catch (Exception e) {
                         last = buffer;
                     }
-                    mat.setImage(mat2Image(last));
+                    mat.setImage(mat2FXImage(last));
                 }
             }
             stopStream(cap);
@@ -180,16 +223,43 @@ public class Controller implements Initializable {
         }
     }
 
+
+    File lastFile;
+
     public void takeShot(ActionEvent actionEvent) {
         String file = new Date().toString() + ".png";
         imwrite(file, last);
         message(file + " was saved");
+        for (Function f : onShotHandlers) {
+            f.apply(file);
+            System.out.println(f);
+        }
     }
 
     public void fullscreenClick(ActionEvent actionEvent) {
         startCamera();
     }
 
+    public void takeShotTimer(ActionEvent actionEvent) {
+        new Thread(() -> {
+            try {
+                Thread.sleep(10_000);
+                this.takeShot(actionEvent);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    public void openFile(MouseEvent mouseEvent) {
+        if (lastFile == null) return;
+        Desktop desktop = Desktop.getDesktop();
+        try {
+            desktop.open(lastFile);
+        } catch (IOException e) {
+            System.out.println("Can't open last shot");
+        }
+    }
 
     public class MyFileWatcher extends FileWatcher {
         public MyFileWatcher(File watchFile) {
