@@ -10,6 +10,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import origami.FindFilters;
 import org.opencv.core.Mat;
@@ -17,6 +18,7 @@ import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
 import origami.*;
+import origami.filters.Detect;
 import origami.filters.FPS;
 import origami.utils.FileWatcher;
 
@@ -43,6 +45,9 @@ public class Controller implements Initializable {
     ImageView preview;
 
     @FXML
+    ImageView detected;
+
+    @FXML
     ImageView mat;
     boolean start = false;
 
@@ -56,6 +61,9 @@ public class Controller implements Initializable {
     // Button stream;
     @FXML
     TextArea custom;
+
+    @FXML
+    TextArea detector;
 
     @FXML
     TextField vid;
@@ -76,6 +84,7 @@ public class Controller implements Initializable {
     ToggleButton fullscreen;
 
     private boolean streamToJpg = false;
+    private Detect detectorObject;
 
     private Image mat2FXImage(Mat frame) {
         MatOfByte buffer = new MatOfByte();
@@ -136,6 +145,7 @@ public class Controller implements Initializable {
     }
 
     public void startCamera() {
+        message("Streaming...");
         new Thread(() -> {
 
             VideoCapture cap = getVideoCapture();
@@ -151,11 +161,18 @@ public class Controller implements Initializable {
                 while (start && cap.grab()) {
                     cap.retrieve(buffer);
                     try {
-                        last = f.apply(buffer);
+                        last = f.apply(buffer).clone();
                     } catch (Exception e) {
-                        last = buffer;
+                        last = buffer.clone();
+                        e.printStackTrace();
                     }
                     mat.setImage(mat2FXImage(last));
+
+                    if(this.detectorObject!=null && detectorObject.detected(last)) {
+                        this.preview.setImage(mat2FXImage(detectorObject.detectMats(last.clone()).get(0)));
+                    } else {
+                        this.preview.setImage(null);
+                    }
                 }
             }
             stopStream(cap);
@@ -200,7 +217,6 @@ public class Controller implements Initializable {
     }
 
     private void updateFilter() {
-
         if (fps.isSelected()) {
             f = new Filters(getCurrentFilter(), new FPS());
         } else {
@@ -232,7 +248,6 @@ public class Controller implements Initializable {
         message(file + " was saved");
         for (Function f : onShotHandlers) {
             f.apply(file);
-            System.out.println(f);
         }
     }
 
@@ -259,6 +274,23 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             System.out.println("Can't open last shot");
         }
+    }
+
+    public void keyTypeDetecor(KeyEvent keyEvent) {
+        String customFilter = detector.getText();
+        try {
+            Filter _f = StringToFilter(customFilter);
+            this.detectorObject = (Detect) _f;
+            message("Detector updated:" + detectorObject.getClass());
+        } catch (Exception e) {
+            this.detectorObject = null;
+            message(e.getMessage());
+        }
+    }
+
+    public void detectFrontal(ActionEvent actionEvent) {
+        this.detector.setText("{:class origami.filters.detect.Haar :type \"haar.frontal\"}");
+        this.keyTypeDetecor(null);
     }
 
     public class MyFileWatcher extends FileWatcher {
@@ -291,6 +323,8 @@ public class Controller implements Initializable {
             this.f = _f;
             message("Filter updated:" + FilterToString(_f));
         } catch (Exception e) {
+            message(e.getMessage());
+            // e.printStackTrace();
             // unbound
             // e.printStackTrace();
         }

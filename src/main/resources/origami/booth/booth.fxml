@@ -55,7 +55,7 @@
                 </ToggleButton>
 
 
-                <ToggleButton fx:id="fps" mnemonicParsing="false" onAction="#check" prefHeight="27.0">
+                <ToggleButton mnemonicParsing="false" fx:id="fps" onAction="#check" prefHeight="27.0">
                     <tooltip>
                         <Tooltip text="Show framerate"/>
                     </tooltip>
@@ -80,21 +80,42 @@
             <TextField fx:id="message" editable="false" promptText="Message"/>
 
             <TextField fx:id="vid" text="{:device 0}" promptText="Video File or Device"/>
-            <ComboBox fx:id="filters" prefHeight="27.0" promptText="Select FIlter"/>
+            <ComboBox fx:id="filters" prefHeight="27.0" promptText="Select Filter"/>
             <TextArea onKeyTyped="#keyType" minHeight="100.0" prefHeight="100.0" fx:id="custom"
                       promptText="Custom Filter"/>
+
+            <Button fx:id="detectFrontal" mnemonicParsing="false" onAction="#detectFrontal" prefHeight="27.0">
+                <tooltip>
+                    <Tooltip text="Detect Frontal"/>
+                </tooltip>
+                <graphic>
+                    <ImageView fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="/face.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+            <TextArea onKeyTyped="#keyTypeDetecor" minHeight="100.0" prefHeight="100.0" fx:id="detector"
+                      promptText="; {:class origami.filters.detect.Haar, :type haar.frontal }"/>
             <!--            <CheckBox fx:id="fps" mnemonicParsing="false" onAction="#check" prefHeight="27.0" text="FPS" />-->
             <!--            <CheckBox fx:id="fullscreen" onAction="#fullscreenClick" mnemonicParsing="false" prefHeight="27.0" text="Fullscreen" />-->
             <!--            <TextField fx:id="filterEdit" layoutX="10.0" layoutY="91.0" promptText="" />-->
             <!--            <TextField fx:id="height" layoutX="10.0" layoutY="163.0" promptText="Height" />-->
 
-            <VBox prefHeight="200.0">
-                <ImageView onMouseClicked="#openFile" fx:id="preview" fitHeight="256.0" fitWidth="256.0"
+            <HBox prefHeight="200.0">
+                <ImageView fx:id="detected"
+                           fitHeight="128.0"
+                           fitWidth="128.0"
                            pickOnBounds="true"
                            preserveRatio="true">
                     <Image url="/empty.png"/>
                 </ImageView>
-            </VBox>
+
+                <ImageView onMouseClicked="#openFile" fx:id="preview" fitHeight="128.0" fitWidth="128.0"
+                           pickOnBounds="true"
+                           preserveRatio="true">
+                    <Image url="/empty.png"/>
+                </ImageView>
+            </HBox>
         </VBox>
 
     </items>
