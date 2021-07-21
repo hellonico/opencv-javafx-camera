@@ -12,6 +12,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import org.opencv.video.Video;
+import org.opencv.videoio.VideoWriter;
+import org.opencv.videoio.Videoio;
 import origami.FindFilters;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -30,11 +33,14 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
+import static org.opencv.imgcodecs.Imgcodecs.imread;
 import static org.opencv.imgcodecs.Imgcodecs.imwrite;
 import static origami.Origami.FilterToString;
 import static origami.Origami.StringToFilter;
@@ -110,7 +116,7 @@ public class Controller implements Initializable {
         });
         // set preview image
         onShotHandlers.add(_file -> {
-            this.preview.setImage(file2FXImage(lastFile));
+            this.preview.setImage(file2FXImage(new File(_file)));
             return _file;
         });
         // copy to clipboard
@@ -118,6 +124,7 @@ public class Controller implements Initializable {
             StringSelection stringSelection = new StringSelection(new File(_file).getAbsolutePath());
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection, null);
+            this.message("photo copied to clipboard");
             return _file;
         });
     }
@@ -168,10 +175,12 @@ public class Controller implements Initializable {
                     }
                     mat.setImage(mat2FXImage(last));
 
-                    if(this.detectorObject!=null && detectorObject.detected(last)) {
-                        this.preview.setImage(mat2FXImage(detectorObject.detectMats(last.clone()).get(0)));
-                    } else {
-                        this.preview.setImage(null);
+                    if(this.detectorObject!=null) {
+                        if(detectorObject.detected(last)) {
+                            this.preview.setImage(mat2FXImage(detectorObject.detectMats(last.clone()).get(0)));
+                        } else {
+                            this.preview.setImage(null);
+                        }
                     }
                 }
             }
@@ -179,12 +188,25 @@ public class Controller implements Initializable {
 
         }).start();
 
-        if (streamToJpg)
+        if (streamToJpg) {
             new Thread(() -> {
-                while (start) {
-                    imwrite("stream.jpg", last);
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    // e.printStackTrace();
                 }
+                message("start recording with size: "+last.size());
+                VideoWriter vw = new VideoWriter();
+                String filename = "stream_" + LocalDateTime.now() + ".mp4";
+                vw.open(filename, Videoio.CAP_PROP_FOURCC,5.0 ,last.size());
+
+                while (start) {
+                    vw.write(last);
+                }
+                vw.release();
             }).start();
+        }
+
     }
 
     @Override
@@ -244,7 +266,7 @@ public class Controller implements Initializable {
 
     public void takeShot(ActionEvent actionEvent) {
         String file = new Date().toString() + ".png";
-        imwrite(file, last);
+        imwrite(file, last.clone());
         message(file + " was saved");
         for (Function f : onShotHandlers) {
             f.apply(file);
@@ -291,6 +313,10 @@ public class Controller implements Initializable {
     public void detectFrontal(ActionEvent actionEvent) {
         this.detector.setText("{:class origami.filters.detect.Haar :type \"haar.frontal\"}");
         this.keyTypeDetecor(null);
+    }
+
+    public void togglerecord(ActionEvent actionEvent) {
+        streamToJpg = !streamToJpg;
     }
 
     public class MyFileWatcher extends FileWatcher {

@@ -66,6 +66,17 @@
                     </graphic>
                 </ToggleButton>
 
+                <ToggleButton mnemonicParsing="false" fx:id="togglerecord" onAction="#togglerecord" prefHeight="27.0">
+                    <tooltip>
+                        <Tooltip text="Toggle Record"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
+                            <Image url="/vhs.jpg"/>
+                        </ImageView>
+                    </graphic>
+                </ToggleButton>
+
 
                 <!--               <ToggleButton fx:id="openLast" mnemonicParsing="false" onAction="#openLast" prefHeight="27.0">-->
                 <!--                  <tooltip><Tooltip text="Open Last Shot" /></tooltip>-->
