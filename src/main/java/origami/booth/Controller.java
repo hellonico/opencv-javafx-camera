@@ -175,8 +175,8 @@ public class Controller implements Initializable {
                     }
                     mat.setImage(mat2FXImage(last));
 
-                    if(this.detectorObject!=null) {
-                        if(detectorObject.detected(last)) {
+                    if (this.detectorObject != null) {
+                        if (detectorObject.detected(last)) {
                             this.preview.setImage(mat2FXImage(detectorObject.detectMats(last.clone()).get(0)));
                         } else {
                             this.preview.setImage(null);
@@ -188,25 +188,34 @@ public class Controller implements Initializable {
 
         }).start();
 
-        if (streamToJpg) {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    // e.printStackTrace();
-                }
-                message("start recording with size: "+last.size());
-                VideoWriter vw = new VideoWriter();
-                String filename = "stream_" + LocalDateTime.now() + ".mp4";
-                vw.open(filename, Videoio.CAP_PROP_FOURCC,5.0 ,last.size());
 
-                while (start) {
+    }
+
+    private void startRecordingThread() {
+        new Thread(() -> {
+
+            message("start recording with size: " + last.size());
+            VideoWriter vw = new VideoWriter();
+
+            String filename = "stream_" + LocalDateTime.now() + ".mp4";
+
+            // https://softron.zendesk.com/hc/en-us/articles/207695697-List-of-FourCC-codes-for-video-codecs
+            // slow but compatible ?
+            String code = "mjpg";
+            // fast but only for osx
+            // String code = "avc1";
+            int fourcc = VideoWriter.fourcc(code.charAt(0),code.charAt(1),code.charAt(2),code.charAt(3));
+            vw.open(filename,fourcc , 240, last.size());
+
+            while (streamToJpg) {
+                if(start) {
                     vw.write(last);
                 }
-                vw.release();
-            }).start();
-        }
 
+            }
+            message("stop recording");
+            vw.release();
+        }).start();
     }
 
     @Override
@@ -316,7 +325,13 @@ public class Controller implements Initializable {
     }
 
     public void togglerecord(ActionEvent actionEvent) {
-        streamToJpg = !streamToJpg;
+        synchronized (this) {
+            streamToJpg = !streamToJpg;
+        }
+
+        if (streamToJpg) {
+            startRecordingThread();
+        }
     }
 
     public class MyFileWatcher extends FileWatcher {
@@ -350,9 +365,6 @@ public class Controller implements Initializable {
             message("Filter updated:" + FilterToString(_f));
         } catch (Exception e) {
             message(e.getMessage());
-            // e.printStackTrace();
-            // unbound
-            // e.printStackTrace();
         }
     }
 
