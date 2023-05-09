@@ -21,7 +21,14 @@
         </license>
     </licenses>
 
-  <distributionManagement>
+
+    <scm>
+        <developerConnection>scm:git:git@github.com:hellonico/opencv-javafx-camera.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+
+    <distributionManagement>
     <repository>
       <id>vendredi</id>
       <name>vendredi</name>
