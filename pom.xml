@@ -6,7 +6,7 @@
     <groupId>origami</groupId>
     <artifactId>booth</artifactId>
     <packaging>jar</packaging>
-    <version>0.9.3</version>
+    <version>0.9.5-SNAPSHOT</version>
     <name>booth</name>
     <description>Created with leiningen</description>
     <url>http://example.com/FIXME</url>
