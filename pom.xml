@@ -6,7 +6,7 @@
     <groupId>origami</groupId>
     <artifactId>booth</artifactId>
     <packaging>jar</packaging>
-    <version>0.9</version>
+    <version>0.9.1</version>
     <name>photobooth</name>
     <description>Created with leiningen</description>
     <url>http://example.com/FIXME</url>
@@ -127,18 +127,18 @@
         <dependency>
             <groupId>origami</groupId>
             <artifactId>origami</artifactId>
-            <version>4.7.0-1</version>
+            <version>4.7.0-3</version>
         </dependency>
         <dependency>
             <groupId>org.clojure</groupId>
             <artifactId>clojure</artifactId>
-            <version>1.10.1</version>
+            <version>1.11.1</version>
         </dependency>
 
         <dependency>
             <groupId>origami</groupId>
             <artifactId>filters</artifactId>
-            <version>1.29</version>
+            <version>1.31</version>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>org.controlsfx</groupId>-->

@@ -1,0 +1,4 @@
+[
+ ;{:class origami.filters.MyYolo$V2Tiny}
+ {:class origami.filters.FPS}
+]

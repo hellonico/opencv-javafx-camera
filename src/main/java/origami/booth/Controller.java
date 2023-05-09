@@ -21,7 +21,7 @@ import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
 import origami.*;
-import origami.filters.Detect;
+//import origami.filters.Detect;
 import origami.filters.FPS;
 import origami.utils.FileWatcher;
 
