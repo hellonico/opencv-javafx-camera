@@ -1,3 +1,1 @@
-You need a JDK>11 with FX included.
-
-In intellij, use the eclipse compiler to avoid errors when compiling.
+You need a JDK with JavaFX included.
