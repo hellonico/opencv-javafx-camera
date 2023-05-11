@@ -4,7 +4,7 @@
     <groupId>origami</groupId>
     <artifactId>booth</artifactId>
     <packaging>jar</packaging>
-    <version>0.9.6-SNAPSHOT</version>
+    <version>0.9.6</version>
     <name>booth</name>
     <description>Created with leiningen</description>
     <url>http://example.com/FIXME</url>
@@ -21,7 +21,7 @@
 
     <scm>
         <developerConnection>scm:git:git@github.com:hellonico/opencv-javafx-camera.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>booth-0.9.6</tag>
     </scm>
 
 
