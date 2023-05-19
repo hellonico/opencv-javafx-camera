@@ -43,6 +43,28 @@
                     </graphic>
                 </Button>
 
+                <Button onAction="#loadProject" prefHeight="27.0">
+                    <tooltip>
+                        <Tooltip text="Load Project"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
+                            <Image url="/load.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
+                <Button onAction="#saveProject" prefHeight="27.0">
+                    <tooltip>
+                        <Tooltip text="Save Project"/>
+                    </tooltip>
+                    <graphic>
+                        <ImageView fitHeight="32.0" fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
+                            <Image url="/save.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
                 <ToggleButton fx:id="fullscreen" mnemonicParsing="false" onAction="#fullscreenClick" prefHeight="27.0">
                     <tooltip>
                         <Tooltip text="Fullscreen"/>
@@ -66,7 +88,7 @@
                     </graphic>
                 </ToggleButton>
 
-                <ToggleButton mnemonicParsing="false" fx:id="togglerecord" onAction="#togglerecord" prefHeight="27.0">
+                <ToggleButton mnemonicParsing="false" fx:id="togglerecordButton" onAction="#togglerecord" prefHeight="27.0">
                     <tooltip>
                         <Tooltip text="Toggle Record"/>
                     </tooltip>
@@ -88,11 +110,13 @@
                 <!--               </ToggleButton>-->
             </HBox>
 
-            <TextField fx:id="message" editable="false" promptText="Message"/>
+            <TextArea prefRowCount="2" fx:id="message" editable="false" promptText="Message"/>
+            <TextArea prefRowCount="2" fx:id="projectName" text="saved"/>
 
-            <TextField fx:id="vid" text="{:device 0}" promptText="Video File or Device"/>
-            <ComboBox fx:id="filters" prefHeight="27.0" promptText="Select Filter"/>
-            <TextArea onKeyTyped="#keyType" minHeight="100.0" prefHeight="100.0" fx:id="custom"
+            <TextField fx:id="vid" promptText="Video File or Device"/>
+
+            <ComboBox onAction="#newSelectedFilter" fx:id="filters" prefHeight="27.0" promptText="Select Filter"/>
+            <TextArea onKeyTyped="#filterTextKeyType" minHeight="100.0" prefHeight="100.0" fx:id="custom"
                       promptText="Custom Filter"/>
 
             <Button fx:id="detectFrontal" mnemonicParsing="false" onAction="#detectFrontal" prefHeight="27.0">

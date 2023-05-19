@@ -8,32 +8,26 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import org.opencv.video.Video;
 import org.opencv.videoio.VideoWriter;
-import org.opencv.videoio.Videoio;
 import origami.FindFilters;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
 import origami.*;
 //import origami.filters.Detect;
 import origami.filters.FPS;
 import origami.utils.FileWatcher;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDate;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,6 +40,10 @@ import static origami.Origami.FilterToString;
 import static origami.Origami.StringToFilter;
 
 public class Controller implements Initializable {
+
+    public ToggleButton togglerecordButton;
+    @FXML
+    public TextArea projectName;
 
     @FXML
     ImageView preview;
@@ -62,9 +60,7 @@ public class Controller implements Initializable {
 
     @FXML
     ToggleButton fps;
-    //
-    // @FXML
-    // Button stream;
+
     @FXML
     TextArea custom;
 
@@ -75,7 +71,7 @@ public class Controller implements Initializable {
     TextField vid;
 
     @FXML
-    TextField message;
+    TextArea message;
 
     @FXML
     TextField width;
@@ -84,30 +80,33 @@ public class Controller implements Initializable {
     TextField height;
 
     ObservableList<String> options = FXCollections.observableArrayList();
-    private Mat last = new Mat();
+    Mat last = new Mat();
 
     @FXML
     ToggleButton fullscreen;
 
-    private boolean streamToJpg = false;
-    private Detect detectorObject;
-
-    private Image mat2FXImage(Mat frame) {
-        MatOfByte buffer = new MatOfByte();
-        Imgcodecs.imencode(".png", frame, buffer);
-        return new Image(new ByteArrayInputStream(buffer.toArray()));
-    }
-
-    private Image file2FXImage(File imageFile) {
-        String fileLocation = imageFile.toURI().toString();
-        return new Image(fileLocation);
-    }
+    Detect detectorObject;
 
     ArrayList<Function<String, String>> onShotHandlers = new ArrayList();
+    private Session session = new Session();
+
+    Camera internalCamObject = new Camera();
+
+
+    File lastFile;
+
+
+    public void setupInternalCam() {
+        // internalCamObject.ims.setCloseOption(HIDE_ON_CLOSE);
+        internalCamObject.slowDown(100);
+        internalCamObject.setFn(new BoothCameraFn(this));
+
+    }
 
     public Controller() {
         super();
         // register shot handlers
+        setupInternalCam();
 
         // set last file
         onShotHandlers.add(_file -> {
@@ -116,7 +115,7 @@ public class Controller implements Initializable {
         });
         // set preview image
         onShotHandlers.add(_file -> {
-            this.preview.setImage(file2FXImage(new File(_file)));
+            this.preview.setImage(OrigamiFX.file2FXImage(new File(_file)));
             return _file;
         });
         // copy to clipboard
@@ -129,69 +128,40 @@ public class Controller implements Initializable {
         });
     }
 
-    Filter f;
+
 
     private void message(String e) {
         System.out.println(e);
-        message.setText(e);
+        message.appendText(e);
+        message.appendText("\n");
     }
 
-    Mat buffer = new Mat();
-    Camera fullscreenCam;
-
-
-    public VideoCapture getVideoCapture() {
-        try {
-            String _vid = vid.getText();
-            return Origami.CaptureDevice(_vid);
-        } catch (Exception e) {
-            message(e.getMessage());
-            start = false;
-            throw new RuntimeException(e);
-        }
+    public void restartStream() {
+        internalCamObject.stop();
+        startCamera();
     }
 
     public void startCamera() {
         message("Streaming...");
         new Thread(() -> {
 
-            VideoCapture cap = getVideoCapture();
+            // somewhere else
+            String _vid = vid.getText();
+            internalCamObject.cap(Origami.CaptureDevice(_vid));
 
-            if (fullscreen.isSelected()) {
-                fullscreenCam = new Camera();
-                fullscreenCam
-                        .cap(cap)
-                        .filter(f)
-                        .fullscreen()
-                        .run();
-            } else {
-                while (start && cap.grab()) {
-                    cap.retrieve(buffer);
-                    try {
-                        last = f.apply(buffer).clone();
-                    } catch (Exception e) {
-                        last = buffer.clone();
-                        e.printStackTrace();
-                    }
-                    mat.setImage(mat2FXImage(last));
-
-                    if (this.detectorObject != null) {
-                        if (detectorObject.detected(last)) {
-                            this.preview.setImage(mat2FXImage(detectorObject.detectMats(last.clone()).get(0)));
-                        } else {
-                            this.preview.setImage(null);
-                        }
-                    }
-                }
-            }
-            stopStream(cap);
+            internalCamObject.run();
+            this.start = false;
+            // comes here when finished.
+            // stopStream(this.internalCamObject.VC());
+            // stopRecording if it was started
+            togglerecordButton.setSelected(false);
 
         }).start();
 
-
     }
 
-    private void startRecordingThread() {
+    private synchronized void startRecordingThread() {
+
         new Thread(() -> {
 
             message("start recording with size: " + last.size());
@@ -203,17 +173,23 @@ public class Controller implements Initializable {
             // slow but compatible ?
             String code = "mjpg";
             // fast but only for osx
+            // TODO: should in settings
             // String code = "avc1";
-            int fourcc = VideoWriter.fourcc(code.charAt(0),code.charAt(1),code.charAt(2),code.charAt(3));
-            vw.open(filename,fourcc , 240, last.size());
+            int fourcc = VideoWriter.fourcc(code.charAt(0), code.charAt(1), code.charAt(2), code.charAt(3));
+            vw.open(filename, fourcc, 240, last.size());
 
-            while (streamToJpg) {
-                if(start) {
+            while (togglerecordButton.isSelected()) {
+                if (start) {
                     vw.write(last);
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-
             }
-            message("stop recording");
+
+            message("recording stopped");
             vw.release();
         }).start();
     }
@@ -222,57 +198,51 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         options.addAll(FindFilters.findFilters());
         filters.setItems(options);
-        f = mat -> mat;
         filters.getSelectionModel().selectedItemProperty().addListener((Observable, oldValue, newValue) -> {
             updateFilter();
         });
     }
 
     public void startStream(ActionEvent actionEvent) {
-        if (!start) {
+        start = !start;
+        if (start) {
             startCamera();
         } else {
-            // mat.setImage(mat2Image(new Mat(1, 1, CvType.CV_8UC3)));
+            internalCamObject.stop();
+            message("Stream ended...");
         }
-        start = !start;
     }
-
-    public void stopStream(VideoCapture cap) {
-        start = false;
-        cap.release();
-        message("Stream ended...");
-    }
+//
+//    public void stopStream(VideoCapture cap) {
+//        internalCamObject.stop();
+//
+//        start = false;
+////        cap.release();
+//
+//    }
 
     public void check(ActionEvent actionEvent) {
         updateFilter();
     }
 
     private void updateFilter() {
+        Filter f = mat -> mat;
         if (fps.isSelected()) {
-            f = new Filters(getCurrentFilter(), new FPS());
+            f = new Filters(getFilterFromCustomEditText(), new FPS());
         } else {
-            f = getCurrentFilter();
+            f = getFilterFromCustomEditText();
         }
+        this.internalCamObject.filter(f);
     }
 
-    private Filter getCurrentFilter() {
-        String current = filters.getValue();
-        try {
-            Class klass = Class.forName(current);
-            Filter _f = (Filter) klass.newInstance();
-            String label = FilterToString(_f);
-            custom.setText(label);
-            return _f;
-        } catch (Exception e) {
-            if (!"".equals(current) && current != null)
-                message("Can't load:" + current);
-            return f -> f;
-        }
+    private Filter getFilterFromCustomEditText() {
+        String customString = custom.getText();
+        Filter _f = Origami.StringToFilter(customString);
+        String label = FilterToString(_f);
+        return _f;
     }
 
-
-    File lastFile;
-
+    // this is in camera
     public void takeShot(ActionEvent actionEvent) {
         String file = new Date().toString() + ".png";
         imwrite(file, last.clone());
@@ -283,7 +253,17 @@ public class Controller implements Initializable {
     }
 
     public void fullscreenClick(ActionEvent actionEvent) {
-        startCamera();
+        // startCamera();
+        this.internalCamObject.headless();
+        this.internalCamObject.fullscreen();
+
+        message("HEADLESS:"+this.internalCamObject.isHeadless());
+        if(this.internalCamObject.isHeadless()) {
+            this.internalCamObject.ims.Window.setVisible(false);
+            this.internalCamObject.setFn(new BoothCameraFn(this));
+        } else {
+            this.internalCamObject.setFn(new DefaultCameraFn());
+        }
     }
 
     public void takeShotTimer(ActionEvent actionEvent) {
@@ -325,47 +305,83 @@ public class Controller implements Initializable {
     }
 
     public void togglerecord(ActionEvent actionEvent) {
-        synchronized (this) {
-            streamToJpg = !streamToJpg;
-        }
-
+        boolean streamToJpg = togglerecordButton.isSelected();
         if (streamToJpg) {
+            streamToJpg = true;
+            message("Recording is ON");
             startRecordingThread();
+        } else {
+            streamToJpg = false;
+            message("Recording is OFF");
+        }
+    }
+
+    public void saveProject() {
+        File projectFolder = new File(this.projectName.getText());
+        projectFolder.mkdirs();
+        session.saveSession(projectName.getText(), "cam.edn", vid);
+        session.saveSession(projectName.getText(), "filters.edn", custom);
+    }
+
+    public void loadProject() {
+        // TODO: create projects
+        session.loadSession(projectName.getText(), "cam.edn", vid);
+        session.loadSession(projectName.getText(), "filters.edn", custom);
+
+        updateFilter();
+//        restartStream();
+    }
+
+    public void newSelectedFilter(ActionEvent actionEvent) {
+        try {
+            // get the filter from the class name
+            Class flass = Class.forName(filters.getValue());
+            Filter _f = (Filter) flass.newInstance();
+            custom.setText(Origami.FilterToString(_f));
+            updateFilter();
+        } catch (Exception e) {
+            e.printStackTrace();
+            message(e.getMessage());
         }
     }
 
     public class MyFileWatcher extends FileWatcher {
-        public MyFileWatcher(File watchFile) {
+        public MyFileWatcher(File watchFile, TextArea custom) {
             super(watchFile);
         }
 
         @Override
         public void doOnChange() {
-            keyType();
+            try {
+                custom.setText(Files.readString(Path.of(this.file.toURI())));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
         }
+
 
     }
 
     MyFileWatcher fw;
 
-    public void keyType() {
+    public void filterTextKeyType() {
+
         String customFilter = custom.getText();
+
         File f = new File(customFilter);
-        if (fw != null) fw.stopThread();
         if (f.exists()) {
-            Filter fi = StringToFilter(f);
-            this.f = fi;
-            fw = new MyFileWatcher(f);
+            if (fw != null) {
+                fw.stopThread();
+            }
+
+            fw = new MyFileWatcher(f, custom);
             fw.start();
-            message("Filter loaded:" + f.getName());
+            message("Starting watcher:" + f.getName());
+        } else {
+            updateFilter();
         }
-        try {
-            Filter _f = StringToFilter(customFilter);
-            this.f = _f;
-            message("Filter updated:" + FilterToString(_f));
-        } catch (Exception e) {
-            message(e.getMessage());
-        }
+
     }
 
 }
