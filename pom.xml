@@ -19,15 +19,20 @@
     <url>http://example.com/FIXME</url>
 
     <properties>
-        <origami.main.class>origami.booth.Main</origami.main.class>
+        <origami.main.class>origami.booth.Booth</origami.main.class>
         <origami.fx.app>true</origami.fx.app>
     </properties>
-    
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.32</version>
+        </dependency>
+    </dependencies>
 
     <scm>
         <developerConnection>scm:git:git@github.com:hellonico/opencv-javafx-camera.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
-
 
 </project>

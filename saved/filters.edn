@@ -1,1 +1,1 @@
-{:class origami.filters.queen.Queen$John :lower 10 :upper 130 :main "#FFCCaa" :sub "#aaCCaa" }
+{:class origami.filters.inprogress.ArtisticImpressionistFilter, :gradientWeight 0.9 :gradient true :colorOverride "12,0.0,0.8,0.0" :gradientStart "100,0.0,255,0.0" :gradientEnd "255,203.0,0.8,0.0"}

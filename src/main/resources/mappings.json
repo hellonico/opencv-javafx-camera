@@ -1,0 +1,68 @@
+{
+  "Manga2" : {
+    "a" : ["Inc", "kernelSize","2"],
+    "z" : ["Inc", "kernelSize","-2"],
+    "s" : ["Inc", "cannyLow", "5"],
+    "x" : ["Inc", "cannyLow", "-5"],
+    "d" : ["Inc", "cannyHigh", "5"],
+    "c" : ["Inc", "cannyHigh", "-5"],
+    "f" : ["Inc", "sigmaColor", "5"],
+    "v" : ["Inc", "sigmaColor", "-5"],
+    "j" : ["Inc", "sigmaSpace", "5"],
+    "m" : ["Inc", "sigmaSpace", "-5"],
+    "k" : ["Inc", "filterD", "1"],
+    "," : ["Inc", "filterD", "-1"]
+  },
+  "Histogram" : {
+    "c" : ["Toggle", "circles"],
+    "s" : ["Inc", "bins","1"],
+    "x" : ["Inc", "bins","-1"]
+  },
+  "Ghost" : {
+    "a" : ["Inc", "alpha","0.01"],
+    "z" : ["Inc", "alpha","-0.01"],
+    "s" : ["Inc", "beta", "0.01"],
+    "x" : ["Inc", "beta", "-0.01"],
+    "d" : ["Inc", "gamma", "1"],
+    "c" : ["Inc", "gamma", "-1"],
+    "f" : ["Inc", "sigmaX", "1"],
+    "v" : ["Inc", "sigmaX", "-1"],
+    "j" : ["Inc", "blur", "2"],
+    "m" : ["Inc", "blur", "-2"]
+  },
+  "Picasso" : {
+    "a" : ["Inc", "kernelSize","2"],
+    "z" : ["Inc", "kernelSize","-2"],
+    "s" : ["Inc", "numShapes", "1"],
+    "x" : ["Inc", "numShapes", "-1"],
+    "c" : ["Toggle", "paletteReversed"],
+    "f" : ["Inc", "sigma", "1"],
+    "v" : ["Inc", "sigma", "-1"],
+    "g" : ["Inc", "cannyLow", "1"],
+    "b" : ["Inc", "cannyLow", "-1"],
+    "h" : ["Inc", "cannyHigh", "1"],
+    "n" : ["Inc", "cannyHigh", "-1"]
+  },
+  "DetailEnhance" : {
+    "d": ["Inc", "sigma_r", "0.05"],
+    "c": ["Inc", "sigma_r", "-0.05"],
+    "f": ["Inc", "sigma_s", "1"],
+    "v": ["Inc", "sigma_s", "-1"]
+  },
+  "ContrastFilter" : {
+    "d": ["Inc", "alpha", "0.1"],
+    "c": ["Inc", "alpha", "-0.1"],
+    "f": ["Inc", "beta", "5"],
+    "v": ["Inc", "beta", "-5"]
+},
+  "HighContrast": {
+    "d": ["Inc","alpha","0.1"],
+    "c": ["Inc","alpha","-0.1"]},
+  "Canny": {
+    "t": ["Toggle", "inverted"],
+    "d": ["Inc", "threshold1", "10"],
+    "c": ["Inc", "threshold1", "-10"],
+    "f": ["Inc", "threshold2", "10"],
+    "v": ["Inc", "threshold2", "-10"]
+  }
+}

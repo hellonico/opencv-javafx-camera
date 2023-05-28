@@ -1,40 +1,34 @@
 package origami.booth;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import org.opencv.videoio.VideoWriter;
-import origami.FindFilters;
 import org.opencv.core.Mat;
-import org.opencv.videoio.VideoCapture;
 import origami.*;
-//import origami.filters.Detect;
 import origami.filters.FPS;
 import origami.utils.FileWatcher;
+import origami.utils.Resourcer;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
-import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.function.Function;
 
-import static org.opencv.imgcodecs.Imgcodecs.imread;
 import static org.opencv.imgcodecs.Imgcodecs.imwrite;
 import static origami.Origami.FilterToString;
 import static origami.Origami.StringToFilter;
@@ -44,6 +38,7 @@ public class Controller implements Initializable {
     public ToggleButton togglerecordButton;
     @FXML
     public TextArea projectName;
+    public SplitPane panel;
 
     @FXML
     ImageView preview;
@@ -98,7 +93,7 @@ public class Controller implements Initializable {
 
     public void setupInternalCam() {
         // internalCamObject.ims.setCloseOption(HIDE_ON_CLOSE);
-        internalCamObject.slowDown(100);
+//        internalCamObject.slowDown(100);
         internalCamObject.setFn(new BoothCameraFn(this));
 
     }
@@ -107,6 +102,14 @@ public class Controller implements Initializable {
         super();
         // register shot handlers
         setupInternalCam();
+
+        // register key mappings
+        try {
+            loadKeyMapping();
+        } catch (Exception e) {
+            e.printStackTrace();
+            // throw new RuntimeException(e);
+        }
 
         // set last file
         onShotHandlers.add(_file -> {
@@ -129,7 +132,6 @@ public class Controller implements Initializable {
     }
 
 
-
     private void message(String e) {
         System.out.println(e);
         message.appendText(e);
@@ -144,54 +146,14 @@ public class Controller implements Initializable {
     public void startCamera() {
         message("Streaming...");
         new Thread(() -> {
-
-            // somewhere else
-            String _vid = vid.getText();
-            internalCamObject.cap(Origami.CaptureDevice(_vid));
-
             internalCamObject.run();
-            this.start = false;
-            // comes here when finished.
-            // stopStream(this.internalCamObject.VC());
-            // stopRecording if it was started
+
+            // this.start = false;
+
             togglerecordButton.setSelected(false);
 
         }).start();
 
-    }
-
-    private synchronized void startRecordingThread() {
-
-        new Thread(() -> {
-
-            message("start recording with size: " + last.size());
-            VideoWriter vw = new VideoWriter();
-
-            String filename = "stream_" + LocalDateTime.now() + ".mp4";
-
-            // https://softron.zendesk.com/hc/en-us/articles/207695697-List-of-FourCC-codes-for-video-codecs
-            // slow but compatible ?
-            String code = "mjpg";
-            // fast but only for osx
-            // TODO: should in settings
-            // String code = "avc1";
-            int fourcc = VideoWriter.fourcc(code.charAt(0), code.charAt(1), code.charAt(2), code.charAt(3));
-            vw.open(filename, fourcc, 240, last.size());
-
-            while (togglerecordButton.isSelected()) {
-                if (start) {
-                    vw.write(last);
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-
-            message("recording stopped");
-            vw.release();
-        }).start();
     }
 
     @Override
@@ -203,7 +165,7 @@ public class Controller implements Initializable {
         });
     }
 
-    public void startStream(ActionEvent actionEvent) {
+    public void startStream() {
         start = !start;
         if (start) {
             startCamera();
@@ -212,14 +174,6 @@ public class Controller implements Initializable {
             message("Stream ended...");
         }
     }
-//
-//    public void stopStream(VideoCapture cap) {
-//        internalCamObject.stop();
-//
-//        start = false;
-////        cap.release();
-//
-//    }
 
     public void check(ActionEvent actionEvent) {
         updateFilter();
@@ -257,8 +211,8 @@ public class Controller implements Initializable {
         this.internalCamObject.headless();
         this.internalCamObject.fullscreen();
 
-        message("HEADLESS:"+this.internalCamObject.isHeadless());
-        if(this.internalCamObject.isHeadless()) {
+        message("HEADLESS:" + this.internalCamObject.isHeadless());
+        if (this.internalCamObject.isHeadless()) {
             this.internalCamObject.ims.Window.setVisible(false);
             this.internalCamObject.setFn(new BoothCameraFn(this));
         } else {
@@ -279,12 +233,7 @@ public class Controller implements Initializable {
 
     public void openFile(MouseEvent mouseEvent) {
         if (lastFile == null) return;
-        Desktop desktop = Desktop.getDesktop();
-        try {
-            desktop.open(lastFile);
-        } catch (IOException e) {
-            System.out.println("Can't open last shot");
-        }
+        OrigamiFX.desktopOpenFile(lastFile.getAbsolutePath());
     }
 
     public void keyTypeDetecor(KeyEvent keyEvent) {
@@ -305,13 +254,10 @@ public class Controller implements Initializable {
     }
 
     public void togglerecord(ActionEvent actionEvent) {
-        boolean streamToJpg = togglerecordButton.isSelected();
-        if (streamToJpg) {
-            streamToJpg = true;
+        internalCamObject.record();
+        if (togglerecordButton.isSelected()) {
             message("Recording is ON");
-            startRecordingThread();
         } else {
-            streamToJpg = false;
             message("Recording is OFF");
         }
     }
@@ -329,41 +275,85 @@ public class Controller implements Initializable {
         session.loadSession(projectName.getText(), "filters.edn", custom);
 
         updateFilter();
-//        restartStream();
+        updateDevice();
     }
 
     public void newSelectedFilter(ActionEvent actionEvent) {
         try {
-            // get the filter from the class name
             Class flass = Class.forName(filters.getValue());
             Filter _f = (Filter) flass.newInstance();
             custom.setText(Origami.FilterToString(_f));
             updateFilter();
         } catch (Exception e) {
-            e.printStackTrace();
             message(e.getMessage());
         }
     }
 
-    public class MyFileWatcher extends FileWatcher {
-        public MyFileWatcher(File watchFile, TextArea custom) {
-            super(watchFile);
+    public void updateDevice() {
+        message("New Device Info Loaded");
+        String _vid = vid.getText();
+        internalCamObject.device(_vid);
+        if (start) {
+            restartStream();
         }
+    }
 
-        @Override
-        public void doOnChange() {
-            try {
-                custom.setText(Files.readString(Path.of(this.file.toURI())));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+    public void resize(MouseEvent mouseEvent) {
+        // mat.getParent().layout();
+    }
+
+    public void loadKeyMapping() throws Exception {
+
+        String text = Resourcer.linesFromResourceAndCustomization("mappings.json");
+
+        JSONObject root = JSON.parseObject(text);
+        for (String filterName : root.keySet()) {
+            JSONObject map = (JSONObject) root.get(filterName);
+
+            HashMap keysForFilter = new HashMap();
+            for (String key : map.keySet()) {
+                JSONArray array = (JSONArray) map.get(key);
+                String klass = (String) array.get(0);
+                array.remove(0);
+                Constructor c = Class.forName("origami.booth.FilterAction$" + klass).getConstructors()[0];
+                keysForFilter.put(key, c.newInstance((String[]) array.toArray(String[]::new)));
             }
+            mappings.put(filterName, keysForFilter);
+        }
+    }
 
+    HashMap mappings = new HashMap();
+
+    public void pressMe(KeyEvent keyEvent) throws Exception {
+
+
+        if (keyEvent.getText().equalsIgnoreCase("@")) {
+            int current = (int) Math.round(panel.getDividerPositions()[0]);
+            panel.setDividerPosition(0, 1 - current);
+            return;
         }
 
+        Filter f = this.internalCamObject.getFilter();
+        String CurrentFilterName = f.getClass().getSimpleName();
+
+        ((FilterAction) ((Map) mappings.get(CurrentFilterName)).get(keyEvent.getText())).apply(f);
+
+        custom.setText(Origami.FilterToString(f));
 
     }
 
-    MyFileWatcher fw;
+    public class WatcherForFilter extends FileWatcher {
+        public WatcherForFilter(File watchFile) {
+            super(watchFile);
+        }
+
+        public void doOnChangeContent(String content) {
+            custom.setText(content);
+        }
+
+    }
+
+    WatcherForFilter fw;
 
     public void filterTextKeyType() {
 
@@ -371,17 +361,22 @@ public class Controller implements Initializable {
 
         File f = new File(customFilter);
         if (f.exists()) {
-            if (fw != null) {
-                fw.stopThread();
+            if (fw == null) {
+                fw = new WatcherForFilter(f);
+                fw.start();
+                message("Started watcher:" + f.getName());
+            } else {
+                if (!f.getAbsolutePath().equalsIgnoreCase(fw.getFile().getAbsolutePath())) {
+                    fw.setFile(f);
+                }
             }
+            message("Watching:" + f.getName());
 
-            fw = new MyFileWatcher(f, custom);
-            fw.start();
-            message("Starting watcher:" + f.getName());
         } else {
+            if (fw != null)
+                fw.stopThread();
             updateFilter();
         }
 
     }
-
 }
