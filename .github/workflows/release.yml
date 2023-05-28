@@ -1,0 +1,24 @@
+name: Build booth for supported os
+on: push
+
+jobs:
+  build-app:
+    strategy:
+      matrix:
+        os: [ macos-latest,ubuntu-20.04, windows-latest ]
+    name: Build the application
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 19
+      - run: mvn clean package jpackage:jpackage
+      - run: mkdir staging && cp app/build/installer/* staging
+      - name: upload build result
+        uses: actions/upload-artifact@v2
+        with:
+          name: FxDemoApp-${{matrix.os}}
+          path: staging

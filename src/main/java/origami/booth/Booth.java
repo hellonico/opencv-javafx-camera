@@ -7,6 +7,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import origami.Origami;
+import origami.video.YouTubeHandler;
 
 import java.awt.*;
 import java.net.URL;
@@ -54,7 +55,7 @@ public class Booth extends Application {
     public static void main(String[] args) throws ClassNotFoundException {
         Origami.init();
         // load youtube handler
-//        Class.forName(YouTubeHandler.class.getName());
+        Class.forName(YouTubeHandler.class.getName());
 
         launch(args);
     }
